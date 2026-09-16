@@ -1,0 +1,27 @@
+name: Build TenSEAL ARM64 (Debian 12)
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build_wheel:
+    runs-on: ubuntu-22.04-arm 
+    
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+          
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ clang
+          
+      - name: Build Wheel
+        run: |
+          python -m pip install --upgrade pip wheel
+          pip wheel tenseal
+          
+      - name: Upload Output (Artifact)
+        uses: actions/upload-artifact@v4
