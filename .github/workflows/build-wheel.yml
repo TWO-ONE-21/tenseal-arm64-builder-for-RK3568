@@ -1,30 +1,85 @@
-name: Build TenSEAL ARM64 (Debian 12)
+name: build tenSEAL for radxa (debian 12 AArch64)
+
+
 
 on:
-  workflow_dispatch: 
+
+  workflow_dispatch:
+
+
 
 jobs:
-  build_wheel:
-    runs-on: ubuntu-22.04-arm 
-    
+
+  build:
+
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Setup Python
-        uses: actions/setup-python@v5
+
+      - name: checkout repo
+
+        uses: actions/checkout@v4
+
+
+
+      - name: set up QEMU untuk ARM64
+
+        uses: docker/setup-qemu-action@v3
+
+
+
+      - name: siapkan folder output
+
+        run: mkdir -p ${{ github.workspace }}/output
+
+
+
+      - name: bangun wheel di dalam container Debian 12 ARM64
+
+        uses: addnab/docker-run-action@v3
+
         with:
-          python-version: '3.11' 
-          
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake g++ clang
-          
-      - name: Build Wheel
-        run: |
-          python -m pip install --upgrade pip wheel
-          pip wheel tenseal
-          
-      - name: Upload Output (Artifact)
+
+          image: arm64v8/debian:bookworm
+
+          options: -v ${{ github.workspace }}/output:/output
+
+          run: |
+
+            echo "memperbarui sistem debian 12"
+
+            apt-get update
+
+            echo "menginstal tools kompilasi c++ dan oython 3.11"
+
+            apt-get install -y python3.11 python3.11-venv python3.11-dev build-essential cmake git curl
+
+            
+
+            echo "membuat venv"
+
+            python3.11 -m venv /venv
+
+            /venv/bin/pip install --upgrade pip
+
+            
+
+            echo "mengompilasi"
+
+            /venv/bin/pip wheel tenseal==0.3.17 --no-binary tenseal -w /output
+
+            
+
+            echo "selesai"
+
+
+
+      - name: Upload file wheel
+
         uses: actions/upload-artifact@v4
+
         with:
-          name: tenseal-cp311-arm64-wheel
-          path: "*.whl"
+
+          name: tenseal-radxa-wheel
+
+          path: output/*.whl
